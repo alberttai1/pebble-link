@@ -1,10 +1,23 @@
 #include <pebble.h>
 #include <time.h>
   
+#define KEY_BUTTON  0
+#define KEY_VIBRATE  1
+
+#define BUTTON_UP  0
+#define BUTTON_SELECT  1
+#define BUTTON_DOWN  2
 
 static Window *window;
 static TextLayer *text_layer;
 
+/***** Handling App Messages *****/
+
+// For sending functions
+static void send(int key, int message)
+{
+  
+}
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   text_layer_set_text(text_layer, "Select");
 }
