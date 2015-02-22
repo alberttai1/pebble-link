@@ -8,7 +8,8 @@ enum
 KEY { KEY_BUTTON, 
      KEY_VIBRATE, 
      KEY_NAME, 
-     KEY_EMAIL
+     KEY_EMAIL,
+     KEY_PHONE
     };
 
 #define BUTTON_UP  0
@@ -18,7 +19,9 @@ KEY { KEY_BUTTON,
 static Window *window;
 static Window *s_splash_window;
 static TextLayer *text_layer;
-static TextLayer *text_layer;
+static TextLayer *name_layer;
+static TextLayer *email_layer;
+static TextLayer *phone_layer;
 static BitmapLayer *s_splash_bitmap_layer; 
 AppTimer *timer; 
 
@@ -59,8 +62,15 @@ static void inbox_received_handler(DictionaryIterator *iterator, void *context)
       break;
       
       case KEY_NAME:
-      text_layer_set_text(text_layer, t->value->cstring); 
-      vibes_short_pulse();
+      text_layer_set_text(name_layer, t->value->cstring); 
+      break;
+
+      case KEY_EMAIL:
+      text_layer_set_text(email_layer, t->value->cstring); 
+      break;
+
+      case KEY_PHONE:
+      text_layer_set_text(phone_layer, t->value->cstring); 
       break;
       
       default:
@@ -75,7 +85,7 @@ static void inbox_received_handler(DictionaryIterator *iterator, void *context)
 /********************************* Buttons ************************************/
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  text_layer_set_text(text_layer, "Attempting to establish a link . . . ");
+  text_layer_set_text(text_layer, "Establishing link . . . ");
 
   send(KEY_BUTTON, BUTTON_SELECT);
 }
@@ -144,13 +154,36 @@ static void splash_window_unload(Window *window){
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
+  name_layer = text_layer_create((GRect) { .origin = { 0, 20 }, .size = { bounds.size.w, 30 } });
+  text_layer_set_font(name_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+//   text_layer_set_text(name_layer, "Name: Albert Tai");
+  text_layer_set_text(name_layer, "");
+  text_layer_set_text_alignment(name_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(name_layer, GTextOverflowModeWordWrap);
 
-  text_layer = text_layer_create((GRect) { .origin = { 0, 72 }, .size = { bounds.size.w, 50 } });
+  email_layer = text_layer_create((GRect) { .origin = { 0, 50 }, .size = { bounds.size.w, 20 } });
+  text_layer_set_font(email_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+//   text_layer_set_text(email_layer, "Email: al@alberttai.com");
+  text_layer_set_text(email_layer, "");
+  text_layer_set_text_alignment(name_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(name_layer, GTextOverflowModeWordWrap);
+
+  phone_layer = text_layer_create((GRect) { .origin = { 0, 70 }, .size = { bounds.size.w, 20 } });
+  text_layer_set_font(phone_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+//   text_layer_set_text(phone_layer, "Phone: 226-239-5218");
+  text_layer_set_text(phone_layer, "");
+  text_layer_set_text_alignment(phone_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(phone_layer, GTextOverflowModeWordWrap);
+  
+  text_layer = text_layer_create((GRect) { .origin = { 0, 90 }, .size = { bounds.size.w, 30 } });
   text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text(text_layer, "Press Select Button to Send");
   text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(text_layer, GTextOverflowModeWordWrap);
   layer_add_child(window_layer, text_layer_get_layer(text_layer));
+  layer_add_child(window_layer, text_layer_get_layer(name_layer));
+  layer_add_child(window_layer, text_layer_get_layer(email_layer));
+  layer_add_child(window_layer, text_layer_get_layer(phone_layer));
 }
 
 static void window_unload(Window *window) {
