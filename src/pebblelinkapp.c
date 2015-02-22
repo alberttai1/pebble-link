@@ -1,9 +1,15 @@
 #include <pebble.h>
 #include <time.h>
+#include <string.h>
 
 #define SPLASH_LOADING 1000
-#define KEY_BUTTON  0
-#define KEY_VIBRATE  1
+  
+enum 
+KEY { KEY_BUTTON, 
+     KEY_VIBRATE, 
+     KEY_NAME, 
+     KEY_EMAIL
+    };
 
 #define BUTTON_UP  0
 #define BUTTON_SELECT  1
@@ -11,6 +17,7 @@
 
 static Window *window;
 static Window *s_splash_window;
+static TextLayer *text_layer;
 static TextLayer *text_layer;
 static BitmapLayer *s_splash_bitmap_layer; 
 AppTimer *timer; 
@@ -47,14 +54,23 @@ static void inbox_received_handler(DictionaryIterator *iterator, void *context)
     {
       case KEY_VIBRATE:
       // Trigger vibration 
-      text_layer_set_text(text_layer, "Vibrate"); 
+      text_layer_set_text(text_layer, "Vibrate Activated"); 
       vibes_short_pulse();
       break;
+      
+      case KEY_NAME:
+      text_layer_set_text(text_layer, t->value->cstring); 
+      vibes_short_pulse();
+      break;
+      
       default:
       APP_LOG(APP_LOG_LEVEL_INFO, "Unknown key: %d", (int)t->key); 
       break;
     }
+    // Get next pair, if any
+    t = dict_read_next(iterator);
   }
+  vibes_short_pulse(); 
 }
 /********************************* Buttons ************************************/
 
