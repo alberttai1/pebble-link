@@ -9,6 +9,7 @@
 #define BUTTON_DOWN  2
 
 static Window *window;
+static Window *s_splash_window;
 static TextLayer *text_layer;
 
 /***** Handling App Messages *****/
@@ -87,6 +88,30 @@ static void outbox_sent_handler(DictionaryIterator *iterator, void *context)
 }
 
 /******************************* main_window **********************************/
+static void splash_window_load(Window *window){
+  // Set a 1000 millisecond to load the splash screen
+  app_timer_register(1000, (AppTimerCallback) timer_callback, NULL);
+  Layer *window_layer = window_get_root_layer(window); 
+  GRect window_bounds = layer_get_bounds(window_layer);
+  s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SPLASH);
+  s_splash_bitmap_layer = bitmap_layer_create(GRect(5, 5, 130, 130));
+  bitmap_layer_set_bitmap(s_splash_bitmap_layer, s_splash_bitmap);
+  layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_splash_bitmap_layer));
+  s_text_loading_layer = text_layer_create(GRect(5, 120, window_bounds.size.w - 5, 30));
+  text_layer_set_font(s_text_loading_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_text(s_text_loading_layer, "Loading the fuel . . .");
+  text_layer_set_overflow_mode(s_text_loading_layer, GTextOverflowModeWordWrap);
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_text_loading_layer));  
+}
+/**
+ * This unloads all the layers after splash screen closes. 
+ * @param Window: The window of the splash screen
+ */
+static void splash_window_unload(Window *window){
+  text_layer_destroy(s_text_loading_layer);
+  gbitmap_destroy(s_splash_bitmap);
+  bitmap_layer_destroy(s_splash_bitmap_layer);
+}
 
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
@@ -113,13 +138,19 @@ static void init(void) {
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 
   window = window_create();
+  s_splash_window = window_create();
   window_set_click_config_provider(window, click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
     .unload = window_unload,
   });
+  window_set_window_handlers(s_splash_window, (WindowHandlers) {
+    .load = splash_window_load,
+    .unload = splash_window_unload,
+  });
   const bool animated = true;
   window_stack_push(window, animated);
+  window_stack_push(s_splash_window, animated);
 }
 
 static void deinit(void) {
