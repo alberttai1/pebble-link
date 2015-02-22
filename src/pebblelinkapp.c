@@ -1,4 +1,6 @@
 #include <pebble.h>
+#include <time.h>
+  
 
 static Window *window;
 static TextLayer *text_layer;
