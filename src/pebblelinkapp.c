@@ -15,6 +15,10 @@ KEY { KEY_BUTTON,
 #define BUTTON_UP  0
 #define BUTTON_SELECT  1
 #define BUTTON_DOWN  2
+#define MAX_PHONE 20
+#define MAX_NAME 60
+#define MAX_EMAIL 60
+#define CONTACT_KEY 1
 
 static Window *window;
 static Window *s_splash_window;
@@ -31,6 +35,12 @@ static TextLayer *s_text_loading_layer;
 // bitmap 
 static GBitmap *s_splash_bitmap;
 
+typedef struct {
+  char  name[MAX_NAME];	       
+  char  email[MAX_EMAIL];	  
+  char  phone[MAX_PHONE]; 
+} personInfo;
+
 /***** Handling App Messages *****/
 
 // For sending functions
@@ -46,6 +56,7 @@ static void send(int key, int message)
 
 static void inbox_received_handler(DictionaryIterator *iterator, void *context) 
 {
+  personInfo temp; 
   // Get the first pair 
   Tuple *t = dict_read_first(iterator);
 
@@ -62,14 +73,17 @@ static void inbox_received_handler(DictionaryIterator *iterator, void *context)
       break;
       
       case KEY_NAME:
+      strcpy(temp.name, t->value->cstring);
       text_layer_set_text(name_layer, t->value->cstring); 
       break;
 
       case KEY_EMAIL:
+      strcpy(temp.email, t->value->cstring);
       text_layer_set_text(email_layer, t->value->cstring); 
       break;
 
       case KEY_PHONE:
+      strcpy(temp.phone, t->value->cstring);
       text_layer_set_text(phone_layer, t->value->cstring); 
       break;
       
@@ -80,6 +94,9 @@ static void inbox_received_handler(DictionaryIterator *iterator, void *context)
     // Get next pair, if any
     t = dict_read_next(iterator);
   }
+  persist_write_data(CONTACT_KEY, &temp, sizeof(temp));
+  printf("The name is %s\n", temp.name); 
+  printf("%d", persist_exists(CONTACT_KEY)); 
   vibes_short_pulse(); 
   text_layer_set_text(text_layer, "Contact Recieved.");
 }
@@ -153,31 +170,44 @@ static void splash_window_unload(Window *window){
 }
 
 static void window_load(Window *window) {
+  personInfo tempPerson; 
+  strcpy(tempPerson.name, ""); 
+  strcpy(tempPerson.email, ""); 
+  strcpy(tempPerson.phone, ""); 
+  
+  if (persist_exists(CONTACT_KEY))
+  {
+    printf("Time to read some previous data"); 
+    persist_read_data(CONTACT_KEY, &tempPerson, sizeof(tempPerson));
+    text_layer_set_text(name_layer, tempPerson.name); 
+    text_layer_set_text(email_layer, tempPerson.email); 
+    text_layer_set_text(phone_layer, tempPerson.phone); 
+  }
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
   name_layer = text_layer_create((GRect) { .origin = { 0, 20 }, .size = { bounds.size.w, 30 } });
-  text_layer_set_font(name_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_font(name_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 //   text_layer_set_text(name_layer, "Name: Albert Tai");
-  text_layer_set_text(name_layer, "");
+  text_layer_set_text(name_layer, tempPerson.name);
   text_layer_set_text_alignment(name_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(name_layer, GTextOverflowModeWordWrap);
 
   email_layer = text_layer_create((GRect) { .origin = { 0, 50 }, .size = { bounds.size.w, 20 } });
   text_layer_set_font(email_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
 //   text_layer_set_text(email_layer, "Email: al@alberttai.com");
-  text_layer_set_text(email_layer, "");
-  text_layer_set_text_alignment(name_layer, GTextAlignmentCenter);
-  text_layer_set_overflow_mode(name_layer, GTextOverflowModeWordWrap);
+  text_layer_set_text(email_layer, tempPerson.email);
+  text_layer_set_text_alignment(email_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(email_layer, GTextOverflowModeWordWrap);
 
   phone_layer = text_layer_create((GRect) { .origin = { 0, 70 }, .size = { bounds.size.w, 20 } });
   text_layer_set_font(phone_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
 //   text_layer_set_text(phone_layer, "Phone: 226-239-5218");
-  text_layer_set_text(phone_layer, "");
+  text_layer_set_text(phone_layer, tempPerson.phone);
   text_layer_set_text_alignment(phone_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(phone_layer, GTextOverflowModeWordWrap);
   
-  text_layer = text_layer_create((GRect) { .origin = { 0, 90 }, .size = { bounds.size.w, 30 } });
-  text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer = text_layer_create((GRect) { .origin = { 0, 90 }, .size = { bounds.size.w, 50 } });
+  text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text(text_layer, "Press Select Button to Send");
   text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(text_layer, GTextOverflowModeWordWrap);
