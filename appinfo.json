@@ -11,6 +11,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/plsplash.png",
+                "name": "IMAGE_SPLASH",
+                "type": "png"
+            },
+            {
                 "file": "images/pebble-icon.png",
                 "menuIcon": true,
                 "name": "IMAGE_APP_ICON",

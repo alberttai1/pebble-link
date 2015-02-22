@@ -1,6 +1,7 @@
 #include <pebble.h>
 #include <time.h>
-  
+
+#define SPLASH_LOADING 1000
 #define KEY_BUTTON  0
 #define KEY_VIBRATE  1
 
@@ -11,6 +12,14 @@
 static Window *window;
 static Window *s_splash_window;
 static TextLayer *text_layer;
+static BitmapLayer *s_splash_bitmap_layer; 
+AppTimer *timer; 
+
+// text layers 
+static TextLayer *s_text_loading_layer;
+
+// bitmap 
+static GBitmap *s_splash_bitmap;
 
 /***** Handling App Messages *****/
 
@@ -50,7 +59,7 @@ static void inbox_received_handler(DictionaryIterator *iterator, void *context)
 /********************************* Buttons ************************************/
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  text_layer_set_text(text_layer, "Select");
+  text_layer_set_text(text_layer, "Attempting to establish a link . . . ");
 
   send(KEY_BUTTON, BUTTON_SELECT);
 }
@@ -76,21 +85,23 @@ static void click_config_provider(void *context) {
 
 static void inbox_dropped_handler(AppMessageResult reason, void *context)
 {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!"); 
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message was dropped!"); 
 }
 static void outbox_failed_handler(DictionaryIterator *iterator, AppMessageResult reason, void *context)
 {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message sent failed!"); 
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message that was sent failed!"); 
 }
 static void outbox_sent_handler(DictionaryIterator *iterator, void *context)
 {
   APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!"); 
 }
-
+void timer_callback(void *data) {
+  window_stack_pop(true);
+}
 /******************************* main_window **********************************/
 static void splash_window_load(Window *window){
   // Set a 1000 millisecond to load the splash screen
-  app_timer_register(1000, (AppTimerCallback) timer_callback, NULL);
+  app_timer_register(SPLASH_LOADING, (AppTimerCallback) timer_callback, NULL);
   Layer *window_layer = window_get_root_layer(window); 
   GRect window_bounds = layer_get_bounds(window_layer);
   s_splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_SPLASH);
@@ -98,8 +109,9 @@ static void splash_window_load(Window *window){
   bitmap_layer_set_bitmap(s_splash_bitmap_layer, s_splash_bitmap);
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_splash_bitmap_layer));
   s_text_loading_layer = text_layer_create(GRect(5, 120, window_bounds.size.w - 5, 30));
-  text_layer_set_font(s_text_loading_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
-  text_layer_set_text(s_text_loading_layer, "Loading the fuel . . .");
+  text_layer_set_font(s_text_loading_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_text(s_text_loading_layer, "Establishing Link . . .");
+  text_layer_set_text_alignment(s_text_loading_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(s_text_loading_layer, GTextOverflowModeWordWrap);
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_text_loading_layer));  
 }
@@ -117,9 +129,11 @@ static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  text_layer = text_layer_create((GRect) { .origin = { 0, 72 }, .size = { bounds.size.w, 20 } });
-  text_layer_set_text(text_layer, "Press any button");
+  text_layer = text_layer_create((GRect) { .origin = { 0, 72 }, .size = { bounds.size.w, 50 } });
+  text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer_set_text(text_layer, "Press Select Button to Send");
   text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(text_layer, GTextOverflowModeWordWrap);
   layer_add_child(window_layer, text_layer_get_layer(text_layer));
 }
 
@@ -139,11 +153,14 @@ static void init(void) {
 
   window = window_create();
   s_splash_window = window_create();
+  // Set the click configuration 
   window_set_click_config_provider(window, click_config_provider);
+  // This sets up the main screen 
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
     .unload = window_unload,
   });
+  // This creates the splash screen 
   window_set_window_handlers(s_splash_window, (WindowHandlers) {
     .load = splash_window_load,
     .unload = splash_window_unload,
@@ -152,9 +169,10 @@ static void init(void) {
   window_stack_push(window, animated);
   window_stack_push(s_splash_window, animated);
 }
-
+// Deinitalizing the windows 
 static void deinit(void) {
   window_destroy(window);
+  window_destroy(s_splash_window);
 }
 
 int main(void) {
