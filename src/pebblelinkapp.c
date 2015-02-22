@@ -87,6 +87,7 @@ static void outbox_sent_handler(DictionaryIterator *iterator, void *context)
 }
 
 /******************************* main_window **********************************/
+
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
@@ -110,7 +111,7 @@ static void init(void) {
 
   // Open AppMessage
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-  
+
   window = window_create();
   window_set_click_config_provider(window, click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
