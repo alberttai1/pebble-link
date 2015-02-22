@@ -81,6 +81,7 @@ static void inbox_received_handler(DictionaryIterator *iterator, void *context)
     t = dict_read_next(iterator);
   }
   vibes_short_pulse(); 
+  text_layer_set_text(text_layer, "Contact Recieved.");
 }
 /********************************* Buttons ************************************/
 
