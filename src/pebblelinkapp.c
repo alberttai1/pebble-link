@@ -37,7 +37,7 @@ static void inbox_received_handler(DictionaryIterator *iterator, void *context)
     {
       case KEY_VIBRATE:
       // Trigger vibration 
-      text_layer_set_text(s_text_layer, "Vibrate"); 
+      text_layer_set_text(text_layer, "Vibrate"); 
       vibes_short_pulse();
       break;
       default:
@@ -49,19 +49,19 @@ static void inbox_received_handler(DictionaryIterator *iterator, void *context)
 /********************************* Buttons ************************************/
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  text_layer_set_text(s_text_layer, "Select");
+  text_layer_set_text(text_layer, "Select");
 
   send(KEY_BUTTON, BUTTON_SELECT);
 }
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  text_layer_set_text(s_text_layer, "Up");
+  text_layer_set_text(text_layer, "Up");
 
   send(KEY_BUTTON, BUTTON_UP);
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  text_layer_set_text(s_text_layer, "Down");
+  text_layer_set_text(text_layer, "Down");
 
   send(KEY_BUTTON, BUTTON_DOWN);
 }
